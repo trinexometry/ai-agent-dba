@@ -1,0 +1,22 @@
+databases:
+  local_free:
+    database_name: FREEPDB1
+    hostname: localhost
+    dsn: localhost:1521/FREEPDB1
+    username_env: ORACLE_LOCAL_USER
+    password_env: ORACLE_LOCAL_PASSWORD
+    mode: null
+    environment: dev
+    require_start_confirmation: true
+    require_mutation_approval: true
+
+  prod1:
+    database_name: PROD
+    hostname: prod-db01.example.internal
+    dsn: prod-db01.example.internal:1521/PROD
+    username_env: ORACLE_PROD1_USER
+    password_env: ORACLE_PROD1_PASSWORD
+    mode: null
+    environment: prod
+    require_start_confirmation: true
+    require_mutation_approval: true
