@@ -1,27 +1,30 @@
+"""Backwards-compatible shim.
+
+The old entry point was `OracleAgent.run(prompt)`. The new entry point is
+`AgenticLoop.run(prompt)` (see `agentic.py`). This module exists so any
+external code that imported `OracleAgent` keeps working.
+"""
+
 from __future__ import annotations
 
-from .agent_options import AgentOptions
-from .db import OracleClient
-from .tools import ToolContext, ToolRegistry, default_registry
+from .agentic import AgenticLoop, build_ollama_loop
+from .tools.registry import default_registry
 
 
 class OracleAgent:
-    def __init__(
-        self,
-        db: OracleClient,
-        options: AgentOptions,
-        registry: ToolRegistry | None = None,
-    ):
-        self.db = db
-        self.options = options
-        self.registry = registry or default_registry()
+    """Deprecated. Use `agentic.AgenticLoop` directly."""
+
+    def __init__(self, db, options, registry=None):
+        registry = registry or default_registry()
+        self.loop = build_ollama_loop(
+            db=db,
+            options=options,
+            registry=registry,
+            audit_dir=options.audit_dir,
+        )
 
     def run(self, prompt: str) -> int:
-        selection = self.registry.select(prompt)
-        if selection is None:
-            print("I could not map that prompt to a supported operation.")
-            self.registry.print_supported_tools()
-            return 2
+        return self.loop.run(prompt)
 
-        context = ToolContext(db=self.db, options=self.options)
-        return selection.tool.run(prompt, context)
+
+__all__ = ["AgenticLoop", "OracleAgent"]

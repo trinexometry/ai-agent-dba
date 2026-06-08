@@ -3,6 +3,7 @@ from __future__ import annotations
 from oracle_db_agent.approval import ApprovalRequest, ask_approval
 from oracle_db_agent.db import normalize_username
 
+from ._compat import BaseDbTool
 from .base import ToolContext, ToolMatch
 from .parsing import contains_any, extract_username
 
@@ -22,11 +23,22 @@ def print_user_status(context: ToolContext, username: str) -> bool:
     return True
 
 
-class ShowUserTool:
+class ShowUserTool(BaseDbTool):
     name = "show_user"
     description = "Show Oracle user account status, lock date, expiry date, and profile."
     examples = ("check user SCOTT status",)
     mutating = False
+    requires_approval = False
+    parameters = {
+        "type": "object",
+        "properties": {
+            "username": {
+                "type": "string",
+                "description": "Oracle username (uppercased).",
+            },
+        },
+        "required": ["username"],
+    }
 
     def match(self, prompt: str) -> ToolMatch | None:
         if "user" in prompt.lower() and contains_any(prompt, ("status", "check", "show", "describe")):
@@ -38,12 +50,30 @@ class ShowUserTool:
         username = normalize_username(username)
         return 0 if print_user_status(context, username) else 1
 
+    def run_with_arguments(self, arguments: dict, context: ToolContext) -> int:
+        username = arguments.get("username")
+        if not username:
+            print("show_user requires 'username'")
+            return 1
+        return 0 if print_user_status(context, normalize_username(str(username))) else 1
 
-class UnlockUserTool:
+
+class UnlockUserTool(BaseDbTool):
     name = "unlock_user"
     description = "Unlock an Oracle user after showing current account status."
     examples = ("unlock user SCOTT",)
     mutating = True
+    requires_approval = True
+    parameters = {
+        "type": "object",
+        "properties": {
+            "username": {
+                "type": "string",
+                "description": "Oracle username (uppercased).",
+            },
+        },
+        "required": ["username"],
+    }
 
     def match(self, prompt: str) -> ToolMatch | None:
         if "unlock" in prompt.lower() and "user" in prompt.lower():
@@ -80,12 +110,30 @@ class UnlockUserTool:
         print_user_status(context, username)
         return 0
 
+    def run_with_arguments(self, arguments: dict, context: ToolContext) -> int:
+        username = arguments.get("username")
+        if not username:
+            print("unlock_user requires 'username'")
+            return 1
+        return self.run(f"unlock user {username}", context)
 
-class LockUserTool:
+
+class LockUserTool(BaseDbTool):
     name = "lock_user"
     description = "Lock an Oracle user after showing current account status."
     examples = ("lock user SCOTT",)
     mutating = True
+    requires_approval = True
+    parameters = {
+        "type": "object",
+        "properties": {
+            "username": {
+                "type": "string",
+                "description": "Oracle username (uppercased).",
+            },
+        },
+        "required": ["username"],
+    }
 
     def match(self, prompt: str) -> ToolMatch | None:
         text = prompt.lower()
@@ -124,3 +172,10 @@ class LockUserTool:
         print("User lock completed.")
         print_user_status(context, username)
         return 0
+
+    def run_with_arguments(self, arguments: dict, context: ToolContext) -> int:
+        username = arguments.get("username")
+        if not username:
+            print("lock_user requires 'username'")
+            return 1
+        return self.run(f"lock user {username}", context)

@@ -78,6 +78,53 @@ class Snapshot:
     end_interval_time: datetime
 
 
+@dataclass(frozen=True)
+class ActiveSession:
+    sid: int
+    serial: int
+    username: str | None
+    status: str
+    machine: str | None
+    program: str | None
+    sql_id: str | None
+    prev_sql_id: str | None
+    event: str | None
+    seconds_in_wait: int | None
+    logon_time: datetime | None
+
+
+@dataclass(frozen=True)
+class TopSql:
+    sql_id: str
+    plan_hash_value: int | None
+    executions: int | None
+    elapsed_seconds: float | None
+    cpu_seconds: float | None
+    buffer_gets: int | None
+    disk_reads: int | None
+    sql_text: str
+
+
+@dataclass(frozen=True)
+class RedoSwitch:
+    day: datetime
+    switches: int
+
+
+@dataclass(frozen=True)
+class WaitEvent:
+    event: str
+    total_waits: int
+    time_waited_seconds: float
+    average_wait_ms: float
+
+
+@dataclass(frozen=True)
+class ExplainPlan:
+    statement: str
+    plan_lines: tuple[str, ...]
+
+
 class OracleClient:
     def __init__(self, config: OracleConfig):
         self.config = config
@@ -349,6 +396,266 @@ class OracleClient:
             },
         )
         return "\n".join(str(row["output"]) for row in rows)
+
+    # -------------------------------------------------- new read-only methods
+
+    def get_active_sessions(
+        self,
+        username: str | None = None,
+        min_seconds_in_wait: int = 0,
+    ) -> list[ActiveSession]:
+        """Return currently active sessions, optionally filtered by username.
+
+        Reads from V$SESSION. No license pack required.
+        """
+
+        params: dict[str, Any] = {"min_wait": min_seconds_in_wait}
+        user_clause = ""
+        if username:
+            params["username"] = normalize_username(username)
+            user_clause = "and s.username = :username"
+        rows = self.fetch_all(
+            f"""
+            select s.sid, s.serial#, s.username, s.status, s.machine, s.program,
+                   s.sql_id, s.prev_sql_id, s.event, s.seconds_in_wait, s.logon_time
+            from v$session s
+            where s.type = 'USER'
+              and s.status = 'ACTIVE'
+              and nvl(s.seconds_in_wait, 0) >= :min_wait
+              {user_clause}
+            order by nvl(s.seconds_in_wait, 0) desc, s.sid
+            fetch first 50 rows only
+            """,
+            params,
+        )
+        return [
+            ActiveSession(
+                sid=int(row["sid"]),
+                serial=int(row["serial#"]),
+                username=row["username"],
+                status=row["status"],
+                machine=row["machine"],
+                program=row["program"],
+                sql_id=row["sql_id"],
+                prev_sql_id=row["prev_sql_id"],
+                event=row["event"],
+                seconds_in_wait=int(row["seconds_in_wait"]) if row["seconds_in_wait"] is not None else None,
+                logon_time=row["logon_time"],
+            )
+            for row in rows
+        ]
+
+    def get_top_sql(
+        self,
+        metric: str = "elapsed",
+        limit: int = 10,
+    ) -> list[TopSql]:
+        """Return the top N SQL by `elapsed`, `cpu`, `gets`, or `reads`.
+
+        Reads from V$SQL. The metric name is matched against a whitelist so
+        the loop can never inject a different column. No license pack required.
+        """
+
+        order_by = {
+            "elapsed": "elapsed_time desc",
+            "cpu": "cpu_time desc",
+            "gets": "buffer_gets desc",
+            "reads": "disk_reads desc",
+        }.get(metric.lower())
+        if order_by is None:
+            raise ValueError(f"unsupported top_sql metric: {metric!r}")
+
+        rows = self.fetch_all(
+            f"""
+            select sql_id, plan_hash_value, executions, elapsed_time, cpu_time,
+                   buffer_gets, disk_reads, sql_fulltext
+            from v$sql
+            where executions > 0
+            order by {order_by}
+            fetch first {int(limit)} rows only
+            """,
+        )
+        out: list[TopSql] = []
+        for row in rows:
+            executions = row["executions"] or 0
+            elapsed = (row["elapsed_time"] or 0) / 1_000_000.0
+            cpu = (row["cpu_time"] or 0) / 1_000_000.0
+            out.append(
+                TopSql(
+                    sql_id=str(row["sql_id"]),
+                    plan_hash_value=int(row["plan_hash_value"]) if row["plan_hash_value"] is not None else None,
+                    executions=int(executions),
+                    elapsed_seconds=elapsed,
+                    cpu_seconds=cpu,
+                    buffer_gets=int(row["buffer_gets"] or 0),
+                    disk_reads=int(row["disk_reads"] or 0),
+                    sql_text=str(row["sql_fulltext"] or "")[:1000],
+                )
+            )
+        return out
+
+    def get_redo_switches(self, hours: int = 24) -> list[RedoSwitch]:
+        """Hourly redo log switch counts over the last `hours` hours.
+
+        Reads from V$LOG_HISTORY. No license pack required.
+        """
+
+        rows = self.fetch_all(
+            """
+            select trunc(first_time, 'HH') as day, count(*) as switches
+            from v$log_history
+            where first_time >= systimestamp - numtodsinterval(:hours, 'HOUR')
+            group by trunc(first_time, 'HH')
+            order by trunc(first_time, 'HH')
+            """,
+            {"hours": int(hours)},
+        )
+        return [
+            RedoSwitch(day=row["day"], switches=int(row["switches"]))
+            for row in rows
+        ]
+
+    def get_top_wait_events(self, limit: int = 10) -> list[WaitEvent]:
+        """Top wait events since instance startup from V$SYSTEM_EVENT.
+
+        No license pack required.
+        """
+
+        rows = self.fetch_all(
+            """
+            select event, total_waits, time_waited_micro, average_wait
+            from (
+                select event, total_waits, time_waited_micro,
+                       case when total_waits = 0 then 0
+                            else time_waited_micro / total_waits / 1000
+                       end as average_wait
+                from v$system_event
+                where wait_class != 'Idle'
+                order by time_waited_micro desc
+            )
+            fetch first :limit rows only
+            """,
+            {"limit": int(limit)},
+        )
+        return [
+            WaitEvent(
+                event=str(row["event"]),
+                total_waits=int(row["total_waits"] or 0),
+                time_waited_seconds=float(row["time_waited_micro"] or 0) / 1_000_000.0,
+                average_wait_ms=float(row["average_wait"] or 0),
+            )
+            for row in rows
+        ]
+
+    def get_session_sql(self, sid: int) -> str | None:
+        """Return the SQL text currently being run by `sid` (v$sql join).
+
+        Returns None if the session has no current SQL.
+        """
+
+        row = self.fetch_one(
+            """
+            select sql_fulltext
+            from v$session s
+            left join v$sql q on q.sql_id = s.sql_id
+            where s.sid = :sid
+            """,
+            {"sid": int(sid)},
+        )
+        if row is None or not row.get("sql_fulltext"):
+            return None
+        return str(row["sql_fulltext"])
+
+    def explain_sql(self, statement: str) -> ExplainPlan:
+        """Run EXPLAIN PLAN for `statement` and return the formatted output.
+
+        `statement` must pass `extract_single_statement()`. We run the plan
+        in its own statement_id scope and clean up the PLAN_TABLE afterwards
+        so successive calls don't leak rows.
+        """
+
+        safe = extract_single_statement(statement)
+        # Use a fresh statement_id per call. Lowercase + underscore is safe
+        # because we control the value.
+        import uuid
+
+        stmt_id = f"agentic_{uuid.uuid4().hex[:12]}"
+        try:
+            self.execute(f"explain plan set statement_id = '{stmt_id}' for {safe}")
+            rows = self.fetch_all(
+                """
+                select plan_line
+                from (
+                    select rpad(' ', 2 * (depth - 1)) || operation || ' '
+                        || options || ' ' || object_name
+                        || ' ' || to_char(cost, '999999990.00') as plan_line,
+                        depth
+                    from plan_table
+                    where statement_id = :stmt_id
+                    order by id
+                )
+                """,
+                {"stmt_id": stmt_id},
+            )
+        finally:
+            # Best-effort cleanup. Even if the cursor is broken, do not raise.
+            try:
+                with self.connection.cursor() as cursor:
+                    cursor.execute(
+                        "delete from plan_table where statement_id = :stmt_id",
+                        {"stmt_id": stmt_id},
+                    )
+                self.connection.commit()
+            except Exception:
+                pass
+        return ExplainPlan(statement=safe, plan_lines=tuple(r["plan_line"] for r in rows))
+
+
+# --------------------------------------------------------------- SQL safety
+
+
+_STATEMENT_TERMINATOR = ";"
+
+
+def extract_single_statement(statement: str) -> str:
+    """Validate that `statement` is a single read-only SQL statement.
+
+    Rejects anything that contains more than one statement (stacked with `;`),
+    has unbalanced parentheses, mentions a write keyword, or has trailing
+    comments that could hide a second statement. The returned string is
+    the trimmed statement, ready to be passed to EXPLAIN PLAN.
+    """
+
+    if statement is None:
+        raise UnsafeIdentifierError("statement is required")
+    text = statement.strip().rstrip(_STATEMENT_TERMINATOR).strip()
+    if not text:
+        raise UnsafeIdentifierError("statement is empty")
+    if text.count(_STATEMENT_TERMINATOR) > 0:
+        raise UnsafeIdentifierError("only a single SQL statement is allowed")
+
+    lower = text.lower()
+    forbidden = (
+        "insert ", "update ", "delete ", "merge ", "drop ", "truncate ",
+        "alter ", "create ", "grant ", "revoke ", "commit", "rollback",
+        "exec ", "execute ", "call ", "begin ", "declare ",
+    )
+    for keyword in forbidden:
+        if keyword in lower:
+            raise UnsafeIdentifierError(f"statement contains forbidden keyword: {keyword.strip()}")
+
+    # Parenthesis balance: cheap defence against malformed input.
+    if text.count("(") != text.count(")"):
+        raise UnsafeIdentifierError("statement has unbalanced parentheses")
+
+    # Must start with a read-only keyword (or a WITH ... SELECT).
+    first_token = lower.split(None, 1)[0] if lower else ""
+    allowed_first = {"select", "with", "explain"}
+    if first_token not in allowed_first:
+        raise UnsafeIdentifierError(
+            f"statement must start with one of: {', '.join(sorted(allowed_first))}"
+        )
+    return text
 
 
 def group_snapshots_by_instance(snapshots: Iterable[Snapshot]) -> dict[tuple[int, int], list[Snapshot]]:

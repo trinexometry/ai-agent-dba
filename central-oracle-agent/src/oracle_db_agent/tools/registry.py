@@ -14,6 +14,7 @@ class ToolSelection:
 class ToolRegistry:
     def __init__(self, tools: list[DbTool]):
         self.tools = tools
+        self._by_name = {tool.name: tool for tool in tools}
 
     def select(self, prompt: str) -> ToolSelection | None:
         matches: list[ToolSelection] = []
@@ -24,6 +25,12 @@ class ToolRegistry:
         if not matches:
             return None
         return max(matches, key=lambda item: item.confidence)
+
+    def get(self, name: str) -> DbTool | None:
+        return self._by_name.get(name)
+
+    def names(self) -> list[str]:
+        return [tool.name for tool in self.tools]
 
     def print_supported_tools(self) -> None:
         print("Supported operations:")
@@ -41,6 +48,15 @@ def default_registry() -> ToolRegistry:
         LongRunningSqlTool,
         TablespaceUsageTool,
     )
+    from .observability import (
+        ActiveSessionsTool,
+        ExplainSqlTool,
+        RedoSwitchesTool,
+        TopSqlTool,
+        UserActivityTool,
+        WaitEventsTool,
+    )
+    from .runbook_tools import GetRunbookTool, ListRunbooksTool
     from .sessions import KillSessionTool
     from .users import LockUserTool, ShowUserTool, UnlockUserTool
 
@@ -54,9 +70,17 @@ def default_registry() -> ToolRegistry:
             LongRunningSqlTool(),
             TablespaceUsageTool(),
             InvalidObjectsTool(),
+            ActiveSessionsTool(),
+            TopSqlTool(),
+            RedoSwitchesTool(),
+            WaitEventsTool(),
+            UserActivityTool(),
+            ExplainSqlTool(),
+            ListRunbooksTool(),
+            GetRunbookTool(),
             AnalyzeAwrTool(),
         ]
     )
 
 
-__all__ = ["ToolContext", "ToolRegistry", "default_registry"]
+__all__ = ["ToolContext", "ToolRegistry", "ToolSelection", "default_registry"]

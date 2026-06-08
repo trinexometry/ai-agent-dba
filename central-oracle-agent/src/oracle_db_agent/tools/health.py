@@ -1,15 +1,18 @@
 from __future__ import annotations
 
+from ._compat import BaseDbTool
 from .base import ToolContext, ToolMatch
 from .formatting import print_rows
 from .parsing import contains_any, extract_owner
 
 
-class BlockingSessionsTool:
+class BlockingSessionsTool(BaseDbTool):
     name = "blocking_sessions"
     description = "Show sessions blocked by another session."
     examples = ("show blocking sessions",)
     mutating = False
+    requires_approval = False
+    parameters = {"type": "object", "properties": {}}
 
     def match(self, prompt: str) -> ToolMatch | None:
         if contains_any(prompt, ("blocking session", "blocked session", "blockers", "blocking")):
@@ -22,11 +25,21 @@ class BlockingSessionsTool:
         return 0
 
 
-class LongRunningSqlTool:
+class LongRunningSqlTool(BaseDbTool):
     name = "long_running_sql"
     description = "Show active long-running SQL operations from V$SESSION_LONGOPS."
     examples = ("show long running sql",)
     mutating = False
+    requires_approval = False
+    parameters = {
+        "type": "object",
+        "properties": {
+            "min_minutes": {
+                "type": "integer",
+                "description": "Minimum elapsed minutes. Default 10.",
+            },
+        },
+    }
 
     def match(self, prompt: str) -> ToolMatch | None:
         text = prompt.lower()
@@ -40,11 +53,13 @@ class LongRunningSqlTool:
         return 0
 
 
-class TablespaceUsageTool:
+class TablespaceUsageTool(BaseDbTool):
     name = "tablespace_usage"
     description = "Show tablespace used, free, total MB, and usage percentage."
     examples = ("show tablespace usage",)
     mutating = False
+    requires_approval = False
+    parameters = {"type": "object", "properties": {}}
 
     def match(self, prompt: str) -> ToolMatch | None:
         if "tablespace" in prompt.lower() and contains_any(prompt, ("usage", "space", "free", "used", "show")):
@@ -66,11 +81,21 @@ class TablespaceUsageTool:
         return 0
 
 
-class InvalidObjectsTool:
+class InvalidObjectsTool(BaseDbTool):
     name = "invalid_objects"
     description = "Show invalid database objects, optionally filtered by schema."
     examples = ("show invalid objects in schema HR",)
     mutating = False
+    requires_approval = False
+    parameters = {
+        "type": "object",
+        "properties": {
+            "owner": {
+                "type": "string",
+                "description": "Optional schema owner to filter by.",
+            },
+        },
+    }
 
     def match(self, prompt: str) -> ToolMatch | None:
         text = prompt.lower()

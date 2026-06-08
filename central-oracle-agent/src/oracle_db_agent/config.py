@@ -50,6 +50,20 @@ class OracleConfig:
 
 
 @dataclass(frozen=True)
+class LicensePolicy:
+    """Oracle license gates that determine which agent features are allowed.
+
+    A target with `diagnostics=False` cannot run AWR, ASH, or ADDM (those
+    features require the Oracle Diagnostics Pack). A target with
+    `tuning=False` cannot run SQL Tuning Advisor or accept SQL Profiles
+    (those require the Oracle Tuning Pack).
+    """
+
+    diagnostics: bool = False
+    tuning: bool = False
+
+
+@dataclass(frozen=True)
 class DatabaseTarget:
     name: str
     database_name: str
@@ -61,10 +75,23 @@ class DatabaseTarget:
     environment: str
     require_start_confirmation: bool = True
     require_mutation_approval: bool = True
+    require_typed_scope_confirmation: bool = True
+    diagnostics_pack_enabled: bool = False
+    tuning_pack_enabled: bool = False
+    runbook_dir: str = "./runbooks"
+    ollama_url: str = "http://localhost:11434"
+    ollama_model: str = "llama3.1:8b"
 
     @property
     def scope_label(self) -> str:
         return f"{self.database_name}@{self.hostname}"
+
+    @property
+    def license_policy(self) -> LicensePolicy:
+        return LicensePolicy(
+            diagnostics=self.diagnostics_pack_enabled,
+            tuning=self.tuning_pack_enabled,
+        )
 
     def oracle_config(self) -> OracleConfig:
         load_dotenv()
@@ -144,6 +171,14 @@ def _target_from_mapping(name: str, value: dict[str, Any]) -> DatabaseTarget:
         environment=str(value.get("environment") or "unknown"),
         require_start_confirmation=bool(value.get("require_start_confirmation", True)),
         require_mutation_approval=bool(value.get("require_mutation_approval", True)),
+        require_typed_scope_confirmation=bool(
+            value.get("require_typed_scope_confirmation", True)
+        ),
+        diagnostics_pack_enabled=bool(value.get("diagnostics_pack_enabled", False)),
+        tuning_pack_enabled=bool(value.get("tuning_pack_enabled", False)),
+        runbook_dir=str(value.get("runbook_dir") or "./runbooks"),
+        ollama_url=str(value.get("ollama_url") or "http://localhost:11434"),
+        ollama_model=str(value.get("ollama_model") or "llama3.1:8b"),
     )
 
 

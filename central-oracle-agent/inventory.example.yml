@@ -9,6 +9,12 @@ databases:
     environment: dev
     require_start_confirmation: true
     require_mutation_approval: true
+    require_typed_scope_confirmation: false
+    diagnostics_pack_enabled: false
+    tuning_pack_enabled: false
+    runbook_dir: ./runbooks
+    ollama_url: http://localhost:11434
+    ollama_model: llama3.1:8b
 
   prod1:
     database_name: PROD
@@ -20,3 +26,9 @@ databases:
     environment: prod
     require_start_confirmation: true
     require_mutation_approval: true
+    require_typed_scope_confirmation: true
+    diagnostics_pack_enabled: true
+    tuning_pack_enabled: true
+    runbook_dir: ./runbooks
+    ollama_url: http://localhost:11434
+    ollama_model: llama3.1:8b

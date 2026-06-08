@@ -20,6 +20,16 @@ class AnalyzeAwrTool:
     description = "Generate AWR report text for the past N days and produce a DBA analysis."
     examples = ("analyze past 4 days database report",)
     mutating = False
+    requires_approval = False
+    parameters = {
+        "type": "object",
+        "properties": {
+            "days": {
+                "type": "integer",
+                "description": "Look-back window in days. Default 1, max 31.",
+            },
+        },
+    }
 
     def match(self, prompt: str) -> ToolMatch | None:
         text = prompt.lower()
@@ -101,3 +111,10 @@ class AnalyzeAwrTool:
 
         heading = f"# AWR Analysis - Past {days} Day(s)\n\n"
         return AwrAnalysis(report_paths=paths, summary=heading + summary)
+
+    def run_with_arguments(self, arguments: dict, context: ToolContext) -> int:
+        try:
+            days = int(arguments.get("days", 1))
+        except (TypeError, ValueError):
+            days = 1
+        return self.run(f"analyze past {max(1, min(days, 31))} days awr", context)

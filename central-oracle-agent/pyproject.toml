@@ -1,17 +1,20 @@
 [project]
 name = "central-oracle-agent"
-version = "0.1.0"
-description = "Central target-aware Oracle database agent with scoped execution and approval gates."
+version = "0.2.0"
+description = "Target-aware Oracle DBA agent backed by a local Ollama LLM, with scoped execution and approval gates."
 requires-python = ">=3.10"
 dependencies = [
     "oracledb>=2.0.0",
-    "openai>=1.0.0",
     "PyYAML>=6.0.0",
+    "requests>=2.31.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
+]
+openai = [
+    "openai>=1.0.0",
 ]
 
 [project.scripts]

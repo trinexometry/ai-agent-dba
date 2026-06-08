@@ -2,15 +2,29 @@ from __future__ import annotations
 
 from oracle_db_agent.approval import ApprovalRequest, ask_approval
 
+from ._compat import BaseDbTool
 from .base import ToolContext, ToolMatch
 from .parsing import extract_sid_serial
 
 
-class KillSessionTool:
+class KillSessionTool(BaseDbTool):
     name = "kill_session"
     description = "Kill an Oracle session after showing session details."
     examples = ("kill session sid 123 serial 456",)
     mutating = True
+    requires_approval = True
+    parameters = {
+        "type": "object",
+        "properties": {
+            "sid": {"type": "integer", "description": "Session ID."},
+            "serial": {"type": "integer", "description": "Session serial number."},
+            "immediate": {
+                "type": "boolean",
+                "description": "If true, kill IMMEDIATE. Default true.",
+            },
+        },
+        "required": ["sid", "serial"],
+    }
 
     def match(self, prompt: str) -> ToolMatch | None:
         text = prompt.lower()
@@ -61,3 +75,12 @@ class KillSessionTool:
         context.db.kill_session(sid, serial, immediate=True)
         print("Kill session command executed.")
         return 0
+
+    def run_with_arguments(self, arguments: dict, context: ToolContext) -> int:
+        try:
+            sid = int(arguments["sid"])
+            serial = int(arguments["serial"])
+        except (KeyError, TypeError, ValueError):
+            print("kill_session requires 'sid' and 'serial' as integers")
+            return 1
+        return self.run(f"kill session sid {sid} serial {serial}", context)

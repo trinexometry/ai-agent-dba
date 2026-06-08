@@ -1,0 +1,62 @@
+{"event": "run_started", "payload": {"prompt": "hi"}, "run_id": "test", "step": 0, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "llm_call", "payload": {}, "run_id": "test", "step": 1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "final_answer", "payload": {"text": "hello user"}, "run_id": "test", "step": 1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "run_finished", "payload": {"summary": "hello user"}, "run_id": "test", "step": -1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "run_started", "payload": {"prompt": "hi"}, "run_id": "test", "step": 0, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "llm_call", "payload": {}, "run_id": "test", "step": 1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "tool_ok", "payload": {"output_chars": 5, "rc": 0, "tool": "echo"}, "run_id": "test", "step": 1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "llm_call", "payload": {}, "run_id": "test", "step": 2, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "tool_ok", "payload": {"output_chars": 6, "rc": 0, "tool": "echo"}, "run_id": "test", "step": 2, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "llm_call", "payload": {}, "run_id": "test", "step": 3, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "final_answer", "payload": {"text": "done"}, "run_id": "test", "step": 3, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "run_finished", "payload": {"summary": "done"}, "run_id": "test", "step": -1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "run_started", "payload": {"prompt": "hi"}, "run_id": "test", "step": 0, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "llm_call", "payload": {}, "run_id": "test", "step": 1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "tool_unknown", "payload": {"name": "no_such_tool"}, "run_id": "test", "step": 1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "llm_call", "payload": {}, "run_id": "test", "step": 2, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "final_answer", "payload": {"text": "ok"}, "run_id": "test", "step": 2, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "run_finished", "payload": {"summary": "ok"}, "run_id": "test", "step": -1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "run_started", "payload": {"prompt": "hi"}, "run_id": "test", "step": 0, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "llm_call", "payload": {}, "run_id": "test", "step": 1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "tool_ok", "payload": {"output_chars": 9, "rc": 0, "tool": "do_mutation"}, "run_id": "test", "step": 1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "llm_call", "payload": {}, "run_id": "test", "step": 2, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "final_answer", "payload": {"text": "done"}, "run_id": "test", "step": 2, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "run_finished", "payload": {"summary": "done"}, "run_id": "test", "step": -1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "run_started", "payload": {"prompt": "hi"}, "run_id": "test", "step": 0, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "llm_call", "payload": {}, "run_id": "test", "step": 1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "approval_denied", "payload": {"tool": "do_mutation"}, "run_id": "test", "step": 1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "llm_call", "payload": {}, "run_id": "test", "step": 2, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "final_answer", "payload": {"text": "ok"}, "run_id": "test", "step": 2, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "run_finished", "payload": {"summary": "ok"}, "run_id": "test", "step": -1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "run_started", "payload": {"prompt": "hi"}, "run_id": "test", "step": 0, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "llm_call", "payload": {}, "run_id": "test", "step": 1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "license_blocked", "payload": {"error": "AWR report generation requires the Oracle Diagnostics Pack and is disabled on target t1. Set 'diagnostics_pack_enabled: true' in inventory.yml if the customer is licensed.", "tool": "analyze_awr"}, "run_id": "test", "step": 1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "llm_call", "payload": {}, "run_id": "test", "step": 2, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "final_answer", "payload": {"text": "ok"}, "run_id": "test", "step": 2, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "run_finished", "payload": {"summary": "ok"}, "run_id": "test", "step": -1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "run_started", "payload": {"prompt": "hi"}, "run_id": "test", "step": 0, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "llm_call", "payload": {}, "run_id": "test", "step": 1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "tool_ok", "payload": {"output_chars": 4, "rc": 0, "tool": "echo"}, "run_id": "test", "step": 1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "llm_call", "payload": {}, "run_id": "test", "step": 2, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "tool_ok", "payload": {"output_chars": 4, "rc": 0, "tool": "echo"}, "run_id": "test", "step": 2, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "step_limit_reached", "payload": {}, "run_id": "test", "step": 3, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "run_started", "payload": {"prompt": "hi"}, "run_id": "test", "step": 0, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "llm_call", "payload": {}, "run_id": "test", "step": 1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "wall_time_exceeded", "payload": {}, "run_id": "test", "step": 1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "run_started", "payload": {"prompt": "hi"}, "run_id": "test", "step": 0, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "llm_call", "payload": {}, "run_id": "test", "step": 1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "llm_error", "payload": {"error": "boom"}, "run_id": "test", "step": 1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "run_started", "payload": {"prompt": "echo please"}, "run_id": "test", "step": 0, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "fallback_keyword_router", "payload": {}, "run_id": "test", "step": 0, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "run_started", "payload": {"prompt": "hi"}, "run_id": "test", "step": 0, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "llm_call", "payload": {}, "run_id": "test", "step": 1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "tool_ok", "payload": {"output_chars": 9, "rc": 0, "tool": "do_mutation"}, "run_id": "test", "step": 1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "llm_call", "payload": {}, "run_id": "test", "step": 2, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "final_answer", "payload": {"text": "done"}, "run_id": "test", "step": 2, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "run_finished", "payload": {"summary": "done"}, "run_id": "test", "step": -1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "run_started", "payload": {"prompt": "hi"}, "run_id": "test", "step": 0, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "llm_call", "payload": {}, "run_id": "test", "step": 1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "tool_ok", "payload": {"output_chars": 0, "rc": 0, "tool": "check_dry_run"}, "run_id": "test", "step": 1, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "llm_call", "payload": {}, "run_id": "test", "step": 2, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "final_answer", "payload": {"text": "ok"}, "run_id": "test", "step": 2, "ts": "2026-06-08T19:38:49+00:00"}
+{"event": "run_finished", "payload": {"summary": "ok"}, "run_id": "test", "step": -1, "ts": "2026-06-08T19:38:49+00:00"}
