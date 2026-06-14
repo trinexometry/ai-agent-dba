@@ -1,0 +1,5 @@
+{"event": "run_started", "payload": {"prompt": "show user GAURAV status"}, "run_id": "20260614T165346-f6685f", "step": 0, "ts": "2026-06-14T16:53:46+00:00"}
+{"event": "llm_call", "payload": {}, "run_id": "20260614T165346-f6685f", "step": 1, "ts": "2026-06-14T16:53:46+00:00"}
+{"event": "llm_error", "payload": {"error": "Ollama rejected the request (HTTP 400): {\"error\":\"registry.ollama.ai/library/phi3:mini does not support tools\"}"}, "run_id": "20260614T165346-f6685f", "step": 1, "ts": "2026-06-14T16:53:46+00:00"}
+{"event": "llm_call", "payload": {}, "run_id": "20260614T165346-f6685f", "step": 2, "ts": "2026-06-14T16:53:46+00:00"}
+{"event": "llm_error", "payload": {"error": "Ollama rejected the request (HTTP 400): {\"error\":\"registry.ollama.ai/library/phi3:mini does not support tools\"}"}, "run_id": "20260614T165346-f6685f", "step": 2, "ts": "2026-06-14T16:53:46+00:00"}

@@ -1,0 +1,2 @@
+[console_scripts]
+oracle-db-agent = oracle_db_agent.cli:main

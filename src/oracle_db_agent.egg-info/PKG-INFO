@@ -1,0 +1,9 @@
+Metadata-Version: 2.4
+Name: oracle-db-agent
+Version: 0.1.0
+Summary: Interactive Oracle database operations agent with approval gates.
+Requires-Python: >=3.10
+Requires-Dist: oracledb>=2.0.0
+Requires-Dist: openai>=1.0.0
+Provides-Extra: dev
+Requires-Dist: pytest>=8.0.0; extra == "dev"

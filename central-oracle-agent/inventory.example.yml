@@ -14,7 +14,7 @@ databases:
     tuning_pack_enabled: false
     runbook_dir: ./runbooks
     ollama_url: http://localhost:11434
-    ollama_model: llama3.1:8b
+    ollama_model: phi3:mini
 
   prod1:
     database_name: PROD
@@ -31,4 +31,4 @@ databases:
     tuning_pack_enabled: true
     runbook_dir: ./runbooks
     ollama_url: http://localhost:11434
-    ollama_model: llama3.1:8b
+    ollama_model: phi3:mini
